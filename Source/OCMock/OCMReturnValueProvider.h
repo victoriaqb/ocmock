@@ -16,13 +16,15 @@
 
 #import <Foundation/Foundation.h>
 
-@interface OCMReturnValueProvider : NSObject 
+@interface OCMReturnValueProvider : NSObject
 {
-	id	returnValue;
+    id    returnValue;
 }
 
 - (instancetype)initWithValue:(id)aValue;
 
 - (void)handleInvocation:(NSInvocation *)anInvocation;
+
+- (instancetype)initWithValue:(id)aValue shouldRetain:(BOOL)shouldRetain;
 
 @end

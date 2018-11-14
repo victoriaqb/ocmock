@@ -18,6 +18,8 @@
 #import <OCMock/OCMConstraint.h>
 #import "NSInvocation+OCMAdditions.h"
 #import "OCMObserverRecorder.h"
+#import "OCMMacroState.h"
+#import "OCMStubRecorder.h"
 
 @interface NSObject(HCMatcherDummy)
 - (BOOL)matches:(id)item;
@@ -32,8 +34,8 @@
 
 - (void)dealloc
 {
-	[recordedNotification release];
-	[super dealloc];
+    [recordedNotification release];
+    [super dealloc];
 }
 
 
@@ -41,14 +43,23 @@
 
 - (NSNotification *)notificationWithName:(NSString *)name object:(id)sender
 {
-	recordedNotification = [[NSNotification notificationWithName:name object:sender] retain];
-	return nil;
+    OCMMacroState *globalState = [OCMMacroState globalState];
+    OCMStubRecorder *recorder = [(OCMStubRecorder *)[globalState recorder] retain];
+    recorder.isEverInvoked = YES;
+    
+    recordedNotification = [[NSNotification notificationWithName:name object:sender] retain];
+    return nil;
 }
 
 - (NSNotification *)notificationWithName:(NSString *)name object:(id)sender userInfo:(NSDictionary *)userInfo
 {
-	recordedNotification = [[NSNotification notificationWithName:name object:sender userInfo:userInfo] retain];
-	return nil;
+    OCMMacroState *globalState = [OCMMacroState globalState];
+    OCMStubRecorder *recorder = [(OCMStubRecorder *)[globalState recorder] retain];
+    recorder.isEverInvoked = YES;
+    
+    
+    recordedNotification = [[NSNotification notificationWithName:name object:sender userInfo:userInfo] retain];
+    return nil;
 }
 
 
@@ -56,33 +67,33 @@
 
 - (BOOL)matchesNotification:(NSNotification *)aNotification
 {
-	return [self argument:[recordedNotification name] matchesArgument:[aNotification name]] &&
-	[self argument:[recordedNotification object] matchesArgument:[aNotification object]] &&
-	[self argument:[recordedNotification userInfo] matchesArgument:[aNotification userInfo]];
+    return [self argument:[recordedNotification name] matchesArgument:[aNotification name]] &&
+    [self argument:[recordedNotification object] matchesArgument:[aNotification object]] &&
+    [self argument:[recordedNotification userInfo] matchesArgument:[aNotification userInfo]];
 }
 
 - (BOOL)argument:(id)expectedArg matchesArgument:(id)observedArg
 {
-	if([expectedArg isKindOfClass:[OCMConstraint class]])
-	{	
-		return [expectedArg evaluate:observedArg];
-	}
-	else if([expectedArg conformsToProtocol:objc_getProtocol("HCMatcher")])
-	{
-		return [expectedArg matches:observedArg];
-	}
-	else if (expectedArg == observedArg)
-	{
-		return YES;
-	}
-	else if (expectedArg == nil || observedArg == nil)
-	{
-		return NO;
-	}
-	else
-	{
-		return [expectedArg isEqual:observedArg];
-	}
+    if([expectedArg isKindOfClass:[OCMConstraint class]])
+    {
+        return [expectedArg evaluate:observedArg];
+    }
+    else if([expectedArg conformsToProtocol:objc_getProtocol("HCMatcher")])
+    {
+        return [expectedArg matches:observedArg];
+    }
+    else if (expectedArg == observedArg)
+    {
+        return YES;
+    }
+    else if (expectedArg == nil || observedArg == nil)
+    {
+        return NO;
+    }
+    else
+    {
+        return [expectedArg isEqual:observedArg];
+    }
 }
 
 

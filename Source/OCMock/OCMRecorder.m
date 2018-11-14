@@ -32,7 +32,7 @@
 {
     [self init];
     [self setMockObject:aMockObject];
-	return self;
+    return self;
 }
 
 - (void)setMockObject:(OCMockObject *)aMockObject
@@ -43,7 +43,7 @@
 - (void)dealloc
 {
     [invocationMatcher release];
-	[super dealloc];
+    [super dealloc];
 }
 
 - (NSString *)description
@@ -79,7 +79,7 @@
 {
     if([invocationMatcher recordedAsClassMethod])
         return [[(OCClassMockObject *)mockObject mockedClass] methodSignatureForSelector:aSelector];
-
+    
     NSMethodSignature *signature = [mockObject methodSignatureForSelector:aSelector];
     if(signature == nil)
     {
@@ -96,12 +96,14 @@
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-	[anInvocation setTarget:nil];
+    [anInvocation setTarget:nil];
+    self.isEverInvoked = YES;
     [invocationMatcher setInvocation:anInvocation];
 }
 
 - (void)doesNotRecognizeSelector:(SEL)aSelector
 {
+    self.isEverInvoked = YES;
     [NSException raise:NSInvalidArgumentException format:@"%@: cannot stub/expect/verify method '%@' because no such method exists in the mocked class.", mockObject, NSStringFromSelector(aSelector)];
 }
 

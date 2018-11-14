@@ -18,6 +18,12 @@
 #import "OCMReturnValueProvider.h"
 #import "OCMFunctions.h"
 
+@interface OCMReturnValueProvider()
+
+@property (nonatomic, assign) BOOL valueRetained;
+
+@end
+
 
 @implementation OCMReturnValueProvider
 
@@ -26,15 +32,38 @@
     if ((self = [super init]))
     {
         returnValue = [aValue retain];
+        _valueRetained = YES;
     }
-	
-	return self;
+    
+    return self;
+}
+
+- (instancetype)initWithValue:(id)aValue shouldRetain:(BOOL)shouldRetain
+{
+    if ((self = [super init]))
+    {
+        if (shouldRetain)
+        {
+            returnValue = [aValue retain];
+        }
+        else
+        {
+            returnValue = aValue;
+            
+        }
+        _valueRetained = shouldRetain;
+    }
+    
+    return self;
 }
 
 - (void)dealloc
 {
-	[returnValue release];
-	[super dealloc];
+    if (_valueRetained)
+    {
+        [returnValue release];
+    }
+    [super dealloc];
 }
 
 - (void)handleInvocation:(NSInvocation *)anInvocation
@@ -49,7 +78,7 @@
         // methods that "create" an object return it with an extra retain count
         [returnValue retain];
     }
-	[anInvocation setReturnValue:&returnValue];
+    [anInvocation setReturnValue:&returnValue];
 }
 
 @end

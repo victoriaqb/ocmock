@@ -51,38 +51,44 @@
 
 - (id)andReturn:(id)anObject
 {
-	[[self stub] addInvocationAction:[[[OCMReturnValueProvider alloc] initWithValue:anObject] autorelease]];
-	return self;
+    [[self stub] addInvocationAction:[[[OCMReturnValueProvider alloc] initWithValue:anObject] autorelease]];
+    return self;
+}
+
+- (id)andReturnSameMock:(id)anObject
+{
+    [[self stub] addInvocationAction:[[[OCMReturnValueProvider alloc] initWithValue:anObject shouldRetain:NO] autorelease]];
+    return self;
 }
 
 - (id)andReturnValue:(NSValue *)aValue
 {
     [[self stub] addInvocationAction:[[[OCMBoxedReturnValueProvider alloc] initWithValue:aValue] autorelease]];
-	return self;
+    return self;
 }
 
 - (id)andThrow:(NSException *)anException
 {
     [[self stub] addInvocationAction:[[[OCMExceptionReturnValueProvider alloc] initWithValue:anException] autorelease]];
-	return self;
+    return self;
 }
 
 - (id)andPost:(NSNotification *)aNotification
 {
     [[self stub] addInvocationAction:[[[OCMNotificationPoster alloc] initWithNotification:aNotification] autorelease]];
-	return self;
+    return self;
 }
 
 - (id)andCall:(SEL)selector onObject:(id)anObject
 {
     [[self stub] addInvocationAction:[[[OCMIndirectReturnValueProvider alloc] initWithProvider:anObject andSelector:selector] autorelease]];
-	return self;
+    return self;
 }
 
-- (id)andDo:(void (^)(NSInvocation *))aBlock 
+- (id)andDo:(void (^)(NSInvocation *))aBlock
 {
     [[self stub] addInvocationAction:[[[OCMBlockCaller alloc] initWithCallBlock:aBlock] autorelease]];
-	return self;
+    return self;
 }
 
 - (id)andForwardToRealObject
@@ -116,6 +122,14 @@
         {
             NSValue *objValue = nil;
             [aValue getValue:&objValue];
+            if ([self->mockObject isEqual:objValue])
+            {
+                return [self andReturnSameMock:objValue];
+            }
+            //            if (![self->mockObject isEqual:objValue])
+            //            {
+            //                objc_setAssociatedObject(self, "OCMAssociatedBoxedValue", objValue, OBJC_ASSOCIATION_RETAIN);
+            //            }
             return [self andReturn:objValue];
         }
         else
