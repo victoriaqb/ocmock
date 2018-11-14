@@ -25,4 +25,6 @@
 
 - (void)handleInvocation:(NSInvocation *)anInvocation;
 
+- (instancetype)initWithValue:(id)aValue shouldRetain:(BOOL)shouldRetain;
+
 @end

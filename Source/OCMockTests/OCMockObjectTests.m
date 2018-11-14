@@ -77,15 +77,44 @@ TestOpaque myOpaque;
 
 @end
 
+@interface TestClassWithClassMethod : NSObject
+
++ (id)shared;
+- (NSString *)doStuffWithClass;
+
+@end
+
+
+@implementation TestClassWithClassMethod
+
++ (id)shared
+{
+    return [TestClassWithClassMethod new];
+}
+
+- (NSString *)doStuffWithClass;
+{
+    return @"Original value";
+}
+
+@end
+
 @interface TestClassWithProperty : NSObject
 
 @property (nonatomic, retain) NSString *title;
+
+- (NSArray *)method;
 
 @end
 
 @implementation TestClassWithProperty
 
 @synthesize title;
+
+- (NSArray *)method
+{
+    return nil;
+}
 
 @end
 
@@ -167,6 +196,26 @@ TestOpaque myOpaque;
 - (void)doStuffWithBlock:(void (^)(id<TestProtocol> arg))block;
 {
     // stubbed out anyway
+}
+
+@end
+
+@interface TestClassThatSingleton : NSObject
+
++ (instancetype)sharedInstance;
+
+@end
+
+@implementation TestClassThatSingleton
+
++ (instancetype)sharedInstance
+{
+    static TestClassThatSingleton *_sharedInstance = nil;
+    static dispatch_once_t oncePredicate;
+    dispatch_once(&oncePredicate, ^{
+        _sharedInstance = [[self alloc] init];
+    });
+    return _sharedInstance;
 }
 
 @end
@@ -557,6 +606,30 @@ static NSString *TestNotification = @"TestNotification";
     XCTAssertEqualObjects(@"stubbed title", myMock.title);
 }
 
+- (void)testArray
+{
+    id arrayItem = OCMClassMock([TestClassWithClassMethod class]);
+    id arrayOwner = OCMClassMock([TestClassWithProperty class]);
+    
+    OCMStub([arrayOwner method]).andReturn(@[arrayItem]);
+    
+    NSArray *array = [arrayOwner method];
+}
+
+- (void)testStabReturnsSameMockWithoutRetainCycle
+{
+    @autoreleasepool {
+        id mockWithClassMethod = OCMClassMock([TestClassWithClassMethod class]);
+        OCMStub([mockWithClassMethod doStuffWithClass]).andReturn(@"Stubbed value");
+        OCMStub([mockWithClassMethod shared]).andReturn(mockWithClassMethod);
+        id mockSingletone = [TestClassWithClassMethod shared];
+        
+        XCTAssertEqualObjects(@"Stubbed value", [mockSingletone doStuffWithClass], @"Should return stubbed value");
+    }
+    id singletone = [TestClassWithClassMethod shared];
+    
+    XCTAssertEqualObjects(@"Original value", [singletone doStuffWithClass], @"Should return original value");
+}
 
 // --------------------------------------------------------------------------------------
 //	beyond stubbing: raising exceptions, posting notifications, etc.
@@ -1168,6 +1241,16 @@ static NSString *TestNotification = @"TestNotification";
     NSDate *end = [NSDate date];
     
     XCTAssertTrue([end timeIntervalSinceDate:start] < 3, @"Should have returned before delay was up");
+}
+
+- (void)testTestClassThatSingleton
+{
+    mock = OCMClassMock([TestClassThatSingleton class]);
+    OCMStub(ClassMethod([mock sharedInstance])).andReturn(mock);
+    
+    id result = [TestClassThatSingleton sharedInstance];
+    
+    XCTAssertEqualObjects(result, mock, @"Should be equal");
 }
 
 @end

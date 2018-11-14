@@ -332,6 +332,21 @@
                     @"should throw NSInvalidArgumentException exception");
 }
 
+- (void)testShouldThrowDescriptiveExceptionWhenTryingToVerifyRealObject
+{
+    id realObject = [NSArray array];
+    
+    // have not found a way to report the error; it seems we must throw an
+    // exception to get out of the forwarding machinery
+    XCTAssertThrowsSpecificNamed(OCMVerify([realObject addObject:@"foo"]),
+                                 NSException,
+                                 NSInternalInconsistencyException,
+                                 @"should throw NSInternalInconsistencyException exception");
+    
+    id mockObject = OCMClassMock([NSString class]);
+    [mockObject lowercaseString];
+    XCTAssertNoThrow(OCMVerify([mockObject lowercaseString]));
+}
 
 - (void)testCanExplicitlySelectClassMethodForStubs
 {

@@ -55,6 +55,12 @@
 	return self;
 }
 
+- (id)andReturnSameMock:(id)anObject
+{
+    [[self stub] addInvocationAction:[[[OCMReturnValueProvider alloc] initWithValue:anObject shouldRetain:NO] autorelease]];
+    return self;
+}
+
 - (id)andReturnValue:(NSValue *)aValue
 {
     [[self stub] addInvocationAction:[[[OCMBoxedReturnValueProvider alloc] initWithValue:aValue] autorelease]];
@@ -116,6 +122,10 @@
         {
             NSValue *objValue = nil;
             [aValue getValue:&objValue];
+            if ([self->mockObject isEqual:objValue])
+            {
+                return [self andReturnSameMock:objValue];
+            }
             return [self andReturn:objValue];
         }
         else
